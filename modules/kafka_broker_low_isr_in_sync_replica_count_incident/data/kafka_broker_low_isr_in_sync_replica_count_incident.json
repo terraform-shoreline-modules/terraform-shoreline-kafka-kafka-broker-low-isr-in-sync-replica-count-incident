@@ -1,0 +1,138 @@
+{
+  "name": "kafka_broker_low_isr_in_sync_replica_count_incident",
+  "description": "In a Kafka cluster, each topic partition is replicated across multiple brokers to ensure high availability and fault tolerance. The In-Sync Replica (ISR) is the set of replicas that are fully caught up with the leader replica and in sync with the latest data. When the ISR count is low, it means that some replicas are lagging behind and are not up-to-date with the latest data. This can lead to data loss, inconsistent reads and writes, and eventual data corruption. Therefore, monitoring and maintaining a healthy ISR count is crucial for a stable Kafka cluster.",
+  "params": [
+    {
+      "name": "PORT",
+      "value": ""
+    },
+    {
+      "name": "TOPIC_NAME",
+      "value": ""
+    },
+    {
+      "name": "ZOOKEEPER_SERVER",
+      "value": ""
+    },
+    {
+      "name": "PARTITION_NUMBER",
+      "value": ""
+    },
+    {
+      "name": "KAFKA_BROKER",
+      "value": ""
+    },
+    {
+      "name": "KAFKA_LOG_FILE",
+      "value": ""
+    },
+    {
+      "name": "ZOOKEEPER_LOG_FILE",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Kafka Broker Low ISR (In-Sync Replica) Count Incident\nIn a Kafka cluster, each topic partition is replicated across multiple brokers to ensure high availability and fault tolerance. The In-Sync Replica (ISR) is the set of replicas that are fully caught up with the leader replica and in sync with the latest data. When the ISR count is low, it means that some replicas are lagging behind and are not up-to-date with the latest data. This can lead to data loss, inconsistent reads and writes, and eventual data corruption. Therefore, monitoring and maintaining a healthy ISR count is crucial for a stable Kafka cluster."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Kafka broker"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `systemctl status kafka`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the log file of the Kafka broker for errors"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -n 100 ${KAFKA_LOG_FILE}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the ISR count of the Kafka topic"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-topics --bootstrap-server ${KAFKA_BROKER}:${PORT} --topic ${TOPIC_NAME} --describe`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the replication factor of the Kafka topic"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-topics --bootstrap-server ${KAFKA_BROKER}:${PORT} --topic ${TOPIC_NAME} --describe`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the ISR count of the Kafka partition"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `zookeeper-shell ${ZOOKEEPER_SERVER}:${PORT} get /brokers/topics/${TOPIC_NAME}/partitions/${PARTITION_NUMBER}/state`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the preferred replica count of the Kafka partition"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `zookeeper-shell ${ZOOKEEPER_SERVER}:${PORT} get /brokers/topics/${TOPIC_NAME}/partitions/${PARTITION_NUMBER}/state`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the replication factor of the affected topic(s) in Kafka to ensure that there are enough replicas to maintain the minimum ISR count. This will ensure that the ISR count does not drop below the minimum threshold."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_increase_replication($TOPIC_NAME)"
+    }
+  ]
+}
